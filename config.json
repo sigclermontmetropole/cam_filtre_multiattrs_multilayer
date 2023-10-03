@@ -1,0 +1,7 @@
+{
+    "myLayers": ["name of my first layer or group of layers", "name of my second layer or group of layers"],
+    "buttonFilters": [ "first button title", "first sql filter","second button title", "second sql filter", "third button title", "third sql filter"],
+    "dataFilters": [ "checkcombobox;etat;Etat","checkcombobox;type;Type", "checkcombobox;gestionnaire;Service gestionnaire","periode;Période;Date de début;Date de fin;date_debut;date_fin"],
+    "vertical": true,
+    "dataSourceIds": []
+}
