@@ -1,10 +1,11 @@
 /** @jsx jsx */
 /** @jsxFrag React.Fragment */
-import { AllWidgetProps, css, jsx, React, QueryResult, SqlQueryParams, DataSourceManager, DataSourceComponent, MultipleDataSourceComponent , FeatureLayerQueryParams } from 'jimu-core'
+import { AllWidgetProps, css, jsx, React, QueryResult, SqlQueryParams } from 'jimu-core'
+import {FeatureLayerDataSource, DataSourceManager, DataSourceComponent, MultipleDataSourceComponent , FeatureLayerQueryParams} from 'jimu-core'
 import { useEffect, useRef, useState } from 'react'
 import { IMConfig } from '../config'
-import { FeatureLayerDataSource, JimuMapView, JimuMapViewComponent} from 'jimu-arcgis'
-import { Label, Switch, ButtonGroup, MultiSelect, TextInput} from 'jimu-ui'
+import { JimuMapView, JimuMapViewComponent} from 'jimu-arcgis'
+import { Label, Switch, ButtonGroup, MultiSelect, TextInput, MultiSelectItem } from 'jimu-ui'
 import { isNull } from 'lodash-es'
 import { string } from 'prop-types'
 
@@ -37,7 +38,8 @@ const display_debug_console_action_ccb = false
 const display_debug_console_action_periode = false
 
 const css_barre_filtre = css``
-const css_ccb = css`margin-top:3px;margin-left:2px;margin-right:2px`
+// Pour css_ccb si besoin : jimu-dropdown-item-checkbox {display: block !important;opacity: 1 !important;
+const css_ccb = css`margin-top:3px;margin-left:2px;margin-right:2px;};`
 const css_switch = css`margin-top:8px;margin-right:10px;`
 const css_label = css`margin-top:7px;margin-right:8px;margin-left:15px;white-space:nowrap;`
 const css_date = css`margin-top:2px;margin-bottom:2px;margin-right:5px;border:none;`
@@ -122,8 +124,8 @@ const Widget = (props: AllWidgetProps<IMConfig>) => {
           if (display_debug_console_initialisation) console.log("  Ajout promise")
           var p1 = ds.query(configuredQueryParams)
           p1.catch((error) => {
-            console.log("  Erreur à la récupération du DS : ")
-            console.log(ds)
+            if (display_debug_console_initialisation)console.log("  Erreur à la récupération du DS : ")
+            if (display_debug_console_initialisation)console.log(ds)
             alert ("Erreur à la récupération d'une couche. Merci d'appuyer sur F5 pour recharger l'application")
             return error;
           })
@@ -154,6 +156,7 @@ const Widget = (props: AllWidgetProps<IMConfig>) => {
           
           d.records.forEach((info) => { 
             var item={label: info.getFieldValue(attr), value: info.getFieldValue(attr)}
+            var itemTest={key: info.getFieldValue(attr), ref: null, props:{label: info.getFieldValue(attr), value: info.getFieldValue(attr)}}
             // if (inArray(item, settings_filter_ccb_array[index]) == false)
 
             if (! settings_filter_ccb_array[index][index_ccb_attribute_values_tab].some(obj => obj.value === info.getFieldValue(attr)))
@@ -301,56 +304,50 @@ const Widget = (props: AllWidgetProps<IMConfig>) => {
   // ------------------------------------------------------------------------------------------------------------
   // --------------------------------------- GESTION DES CCB ----------------------------------------------------
   // ------------------------------------------------------------------------------------------------------------
-  
-  // Configuration CCB : multiselect
-  const affichageCCB = (item, index) => {
-    // if (DS_Ref == null) return (<Label  css={css_label}>Erreur d'initialisation<br/>Pressez la toucheF5</Label>)
-    if (display_debug_console_action_ccb) console.log("Rendu CCB de l'index " + index + "  : " + item[index_ccb_attribute_alias])
-    if (! item[index_ccb_attribute_values_valide]) return 
-    return (
-      <MultiSelect
-        buttonProps={{
-          title: item[index_ccb_attribute_alias]
-        }}  
-        css={css_ccb} 
-        items={item[index_ccb_attribute_values_tab]}
-        placeholder={item[index_ccb_attribute_alias] + " : " + txt_nofilter} 
-        fluid
-        onClickItem={(evt, item, selectedValues) => handleItemClickCCB(evt, item, selectedValues, index)}          
-        displayByValues={items => affichageItemCCB(items, index)}
-      />
-    )
-  }
+const affichageCCB = (item, index) => {
+  if (display_debug_console_action_ccb) console.log("Rendu CCB de l'index " + index + "  : " + item[index_ccb_attribute_alias])  
+  if (!item[index_ccb_attribute_values_valide]) return;
+ 
+  return (
+    <MultiSelect
+      css={css_ccb}
+      placeholder={item[index_ccb_attribute_alias] + " : " + txt_nofilter}
+      onChange={(modifVal, selectedValues) => handleItemClickCCB(selectedValues, index)}
+      displayByValues={items => affichageItemCCB(items, index)}
+    >
+      {item[index_ccb_attribute_values_tab].map((opt) => (
+        <MultiSelectItem
+          label={opt.value}
+          value={opt.value}
+        />        
+      ))}
+    </MultiSelect>
+  );
+};
 
-  // Changement d'état d'un item dans une combobox
-  // On récupère dans index, le numéro dans le tableau de configuration des ccb
-  const handleItemClickCCB = (evt, item, selectedValues, index) => {
-    // Application du filtre par rapport aux éléments retournés dans selectedValues
-    // On prépare directement la requete de la couche
-    var filtre = ""
-    var attribut = settings_filter_ccb_array[index][index_ccb_attribute_name]
-    if (selectedValues.length > 0 && selectedValues.length !=  settings_filter_ccb_array[index][index_ccb_attribute_values_tab].length)
-    {
-      for (var j=0; j<selectedValues.length; j++) {
-        if (j>0) {filtre += " OR " }
-        var value = selectedValues[j].replace("'", "''" )
-        filtre += attribut + " = '" + value + "'"
-      }
+const handleItemClickCCB = (selectedValues, index) => {
+  if (display_debug_console_action_ccb) {console.log("Clic dans CB")}
+  var filtre = "";
+  var attribut = settings_filter_ccb_array[index][index_ccb_attribute_name];
+  var item = settings_filter_ccb_array[index];
+
+  if (selectedValues.length > 0 && selectedValues.length != item[index_ccb_attribute_values_tab].length) {
+    for (var j = 0; j < selectedValues.length; j++) {
+      if (j > 0) { filtre += " OR " }
+      var value = selectedValues[j].replace("'", "''");
+      filtre += attribut + " = '" + value + "'";
     }
-    // Application du filtre pour l'attribut
-    settings_filter_ccb_array[index][index_ccb_attribute_filter] = filtre
-
-    if (display_debug_console_action_ccb) 
-    {
-      console.log("Modification d'une filtre dans une ccb. Liste des filtres CCB Existants")
-      for (var i=0; i<settings_filter_ccb_array.length; i++) {
-        console.log("  -> " + settings_filter_ccb_array[i][index_ccb_attribute_name] + " : " + settings_filter_ccb_array[i][index_ccb_attribute_filter])
-      }
-    }
-
-    // Application des filtres
-    appliquerFiltres()
   }
+  settings_filter_ccb_array[index][index_ccb_attribute_filter] = filtre;
+
+  if (display_debug_console_action_ccb) {
+    console.log("Modification d'un filtre dans une ccb. Liste des filtres CCB Existants");
+    for (var i = 0; i < settings_filter_ccb_array.length; i++) {
+      console.log("  -> " + settings_filter_ccb_array[i][index_ccb_attribute_name] + " : " + settings_filter_ccb_array[i][index_ccb_attribute_filter]);
+    }
+  }
+  appliquerFiltres();
+};
 
   // Configuration de l'affichage de l'entête des ccb
   const affichageItemCCB = (items, index) => {

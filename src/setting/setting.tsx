@@ -5,15 +5,10 @@ import { DataSourceSelector } from 'jimu-ui/advanced/data-source-selector'
 import { useEffect, useRef, useState } from 'react'
 import { IMConfig } from '../config'
 import { Label, TextInput, TextArea, Checkbox } from 'jimu-ui'
-import { jsx, css, DataSource, UseDataSource, ImmutableArray, Immutable, AllDataSourceTypes, ImmutableObject, DataSourceJson } from 'jimu-core'
-import { FeatureLayerDataSource } from 'jimu-arcgis'
+import { jsx, css, DataSource, UseDataSource, ImmutableArray, Immutable, IMDataSourceJson, DataSourceTypes, FeatureLayerDataSource, ImmutableObject, DataSourceJson } from 'jimu-core'
+// import AllDataSourceTypes
 
-const containerCss = css`
-  display: flex;
-  flex-direction: column;
-  padding: 5px;
-}
-`
+const containerCss = css`display: flex;flex-direction: column;padding: 5px;`
 
 // settings interfaces
 interface ExtraProps {
@@ -105,7 +100,8 @@ export default function Setting(props: AllWidgetSettingProps<IMConfig> & ExtraPr
       <label>
         Couches application filtres : 
         <DataSourceSelector
-            types={Immutable([AllDataSourceTypes.FeatureLayer])}
+            // types={Immutable([AllDataSourceTypes.FeatureLayer])}
+            types={Immutable([DataSourceTypes.FeatureLayer])}
             useDataSourcesEnabled mustUseDataSource
             isMultiple={true}
             useDataSources={props.useDataSources}

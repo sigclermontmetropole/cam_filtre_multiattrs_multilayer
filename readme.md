@@ -13,7 +13,7 @@ The settings of the widget :
 - Choose horizontal or vertical disposition for the buttons
 - Filters settings : two text lines per button, one for the displayed text of the button, and another for the sql filter that will be applied when you click on the button.
 
-    Format : 
+    Syntax : 
     
         checkcombobox;attribute_name;attribute_alias
         or
